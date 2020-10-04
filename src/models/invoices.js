@@ -24,7 +24,12 @@ export default {
       }
     },
 
-    *details({ payload: { id } }, { put, call }) {
+    *details(
+      {
+        payload: { id },
+      },
+      { put, call }
+    ) {
       try {
         const response = yield call(invoicesService.details, id);
         yield put({ type: 'detailsSuccess', data: response });
@@ -33,7 +38,12 @@ export default {
       }
     },
 
-    *initialize({ payload: { id } }, { put, call }) {
+    *initialize(
+      {
+        payload: { id },
+      },
+      { put, call }
+    ) {
       try {
         const response = yield call(invoicesService.details, id);
         yield put({ type: 'detailsSuccess', data: response });
@@ -43,7 +53,12 @@ export default {
       }
     },
 
-    *state({ payload: { _id, _rev, state } }, { put, call }) {
+    *state(
+      {
+        payload: { _id, _rev, state },
+      },
+      { put, call }
+    ) {
       try {
         const response = yield call(invoicesService.save, { _id, _rev, state });
         yield put({ type: 'detailsSuccess', data: response });
@@ -55,6 +70,7 @@ export default {
 
     *save({ data, resolve, reject }, { put, call }) {
       try {
+        console.log(data);
         const response = yield call(invoicesService.save, data);
         yield put({ type: 'detailsSuccess', data: response });
         message.success(i18n._(t`Invoice saved!`), 5);
