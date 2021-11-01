@@ -180,14 +180,14 @@ class Invoice extends Component {
                       <td>
                         <Trans>Date</Trans>
                       </td>
-                      <td>{invoice.date}</td>
+                      <td>{new Date(invoice.date).toLocaleDateString()}</td>
                     </tr>
                     {invoice.due_date ? (
                       <tr>
                         <td>
                           <Trans>Due date</Trans>
                         </td>
-                        <td>{invoice.due_date}</td>
+                        <td>{new Date(invoice.due_date).toLocaleDateString()}</td>
                       </tr>
                     ) : null}
                     {invoice.overdue_charge ? (

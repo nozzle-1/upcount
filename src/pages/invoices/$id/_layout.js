@@ -1,87 +1,88 @@
-import { Component } from 'react';
-import { compose } from 'redux';
-import { connect } from 'dva';
-import { Field, FieldArray, formValueSelector, reduxForm } from 'redux-form';
-import { Button, Col, Form, Layout, Row, Select, Menu, Dropdown, Modal } from 'antd';
+import { Component } from 'react'
+import { compose } from 'redux'
+import { connect } from 'dva'
+import { Field, FieldArray, formValueSelector, reduxForm } from 'redux-form'
+import { Button, Col, Form, Layout, Row, Select, Menu, Dropdown, Modal } from 'antd'
 import {
   UserAddOutlined,
   DeleteOutlined,
   EyeOutlined,
   FilePdfOutlined,
   SaveOutlined,
-} from '@ant-design/icons';
-import { t, NumberFormat, Trans } from '@lingui/macro';
-import { withI18n } from '@lingui/react';
-import { forEach, get, isString, includes, has, lowerCase, map } from 'lodash';
+} from '@ant-design/icons'
+import { t, NumberFormat, Trans } from '@lingui/macro'
+import { withI18n } from '@lingui/react'
+import { forEach, get, isString, includes, has, lowerCase, map } from 'lodash'
 
-import moment from 'moment';
-import Link from 'umi/link';
-import router from 'umi/router';
-import withRouter from 'umi/withRouter';
-import currency from 'currency.js';
-import currencyToSymbolMap from 'currency-symbol-map/map';
+import moment from 'moment'
+import Link from 'umi/link'
+import router from 'umi/router'
+import withRouter from 'umi/withRouter'
+import currency from 'currency.js'
+import currencyToSymbolMap from 'currency-symbol-map/map'
 
-import { ADatePicker, AInput, ASelect, ATextarea } from '../../../components/forms/fields';
-import { required } from '../../../components/forms/validators';
-import StateTag from '../../../components/invoices/state-tag';
-import LineItems from '../../../components/invoices/line-items';
-import FooterToolbar from '../../../components/layout/footer-toolbar';
-import { OrganizationContext } from '../../../providers/contexts';
+import { ADatePicker, AInput, ASelect, ATextarea } from '../../../components/forms/fields'
+import { required } from '../../../components/forms/validators'
+import StateTag from '../../../components/invoices/state-tag'
+import LineItems from '../../../components/invoices/line-items'
+import FooterToolbar from '../../../components/layout/footer-toolbar'
+import { OrganizationContext } from '../../../providers/contexts'
+import { dateFormat } from '../../../date'
 
 const totals = (lineItems, taxRates) => {
-  let subTotal = currency(0, { separator: '', symbol: '' });
-  let taxTotal = currency(0, { separator: '', symbol: '' });
+  let subTotal = currency(0, { separator: '', symbol: '' })
+  let taxTotal = currency(0, { separator: '', symbol: '' })
 
   forEach(lineItems, line => {
     if (has(line, 'subtotal')) {
-      subTotal = subTotal.add(line.subtotal);
+      subTotal = subTotal.add(line.subtotal)
       if (has(line, 'taxRate')) {
-        const taxRate = get(taxRates.items, line.taxRate);
+        const taxRate = get(taxRates.items, line.taxRate)
         if (taxRate) {
-          const lineTax = currency(line.subtotal).multiply(taxRate.percentage / 100);
-          taxTotal = taxTotal.add(lineTax);
+          const lineTax = currency(line.subtotal).multiply(taxRate.percentage / 100)
+          taxTotal = taxTotal.add(lineTax)
         }
       }
     }
-  });
+  })
 
-  const total = subTotal.add(taxTotal);
-  return { subTotal, taxTotal, total };
-};
+  const total = subTotal.add(taxTotal)
+  return { subTotal, taxTotal, total }
+}
 
 class InvoiceForm extends Component {
-  componentDidMount() {
+  componentDidMount () {
     if (!this.isNew()) {
       this.props.dispatch({
         type: 'invoices/initialize',
         payload: {
           id: get(this.props, ['match', 'params', 'id']),
         },
-      });
+      })
     }
-    this.props.dispatch({ type: 'clients/list' });
-    this.props.dispatch({ type: 'taxRates/list' });
+    this.props.dispatch({ type: 'clients/list' })
+    this.props.dispatch({ type: 'taxRates/list' })
   }
 
   isNew = () => {
     const {
       match: { params },
-    } = this.props;
+    } = this.props
 
-    return has(params, 'id') && params['id'] === 'new';
-  };
+    return has(params, 'id') && params['id'] === 'new'
+  }
 
   clientSelect = value => {
     if (value === 'new') {
       const {
         match: { params },
-      } = this.props;
+      } = this.props
 
       router.push({
         pathname: `/invoices/${get(params, 'id', 'new')}/client`,
-      });
+      })
     }
-  };
+  }
 
   onStateSelect = (_id, _rev, key) => {
     this.props.dispatch({
@@ -91,15 +92,17 @@ class InvoiceForm extends Component {
         _rev,
         state: key,
       },
-    });
-  };
+    })
+  }
 
   deleteConfirm = (_id, _rev) => {
+    const { i18n } = this.props
+
     Modal.confirm({
-      title: 'Are you sure you want to delete this invoice?',
-      okText: 'Yes',
+      title: i18n._(t`Delete invoice`),
+      okText: i18n._(t`Yes`),
       okType: 'danger',
-      cancelText: 'No',
+      cancelText: i18n._(t`No`),
       onOk: () => {
         this.props.dispatch({
           type: 'invoices/remove',
@@ -107,18 +110,18 @@ class InvoiceForm extends Component {
             _id,
             _rev,
           },
-        });
+        })
       },
-    });
-  };
+    })
+  }
 
   printPDF = invoiceId => {
-    const { ipcRenderer } = window.require('electron');
+    const { ipcRenderer } = window.require('electron')
 
-    ipcRenderer.send('printInvoicePDF', invoiceId);
-  };
+    ipcRenderer.send('printInvoicePDF', invoiceId)
+  }
 
-  render() {
+  render () {
     const {
       i18n,
       children,
@@ -131,38 +134,38 @@ class InvoiceForm extends Component {
       pristine,
       handleSubmit,
       submitting,
-    } = this.props;
-    const { subTotal, taxTotal, total } = totals(lineItems, taxRates);
-    const invoice = get(invoices.items, get(this.props, ['match', 'params', 'id']));
+    } = this.props
+    const { subTotal, taxTotal, total } = totals(lineItems, taxRates)
+    const invoice = get(invoices.items, get(this.props, ['match', 'params', 'id']))
 
     const stateMenu = (_id, _rev) => (
       <Menu onClick={({ item, key }) => this.onStateSelect(_id, _rev, key)}>
-        <Menu.Item key="draft">
+        <Menu.Item key='draft'>
           <Trans>Draft</Trans>
         </Menu.Item>
-        <Menu.Item key="confirmed">
+        <Menu.Item key='confirmed'>
           <Trans>Confirmed</Trans>
         </Menu.Item>
-        <Menu.Item key="paid">
+        <Menu.Item key='paid'>
           <Trans>Paid</Trans>
         </Menu.Item>
         <Menu.Divider />
-        <Menu.Item key="void">
+        <Menu.Item key='void'>
           <Trans>Void</Trans>
         </Menu.Item>
       </Menu>
-    );
+    )
 
     // Invoice PDF
     if (get(location, 'pathname', '').endsWith('pdf')) {
-      return children;
+      return children
     }
 
     // Invoice Preview
     if (get(location, 'pathname', '').endsWith('preview')) {
       return (
         <Layout.Content
-          className="has-toolbar"
+          className='has-toolbar'
           style={{
             width: '21cm',
             minHeight: '29.7cm',
@@ -173,29 +176,29 @@ class InvoiceForm extends Component {
         >
           {children}
         </Layout.Content>
-      );
+      )
     }
 
     // Invoice form
     return (
-      <Layout.Content className="has-toolbar">
-        <Form onFinish={() => handleSubmit()} layout="vertical">
+      <Layout.Content className='has-toolbar'>
+        <Form onFinish={() => handleSubmit()} layout='vertical'>
           <Row gutter={16}>
             <Col span={12}>
               <Field
                 showSearch
-                name="client"
+                name='client'
                 placeholder={i18n._(t`Select or create a client`)}
                 component={ASelect}
                 label={<Trans>Client</Trans>}
                 onSelect={this.clientSelect}
-                optionFilterProp="children"
+                optionFilterProp='children'
                 filterOption={(input, option) => {
-                  const clientName = get(option, ['props', 'children']);
+                  const clientName = get(option, ['props', 'children'])
                   if (isString(clientName)) {
-                    return includes(lowerCase(clientName), lowerCase(input));
+                    return includes(lowerCase(clientName), lowerCase(input))
                   }
-                  return true;
+                  return true
                 }}
                 validate={[required]}
               >
@@ -204,7 +207,7 @@ class InvoiceForm extends Component {
                     {get(client, 'name', '-')}
                   </Select.Option>
                 ))}
-                <Select.Option value="new" key="new" style={{ borderTop: '1px solid #e8e8e8' }}>
+                <Select.Option value='new' key='new' style={{ borderTop: '1px solid #e8e8e8' }}>
                   <UserAddOutlined />
                   {` `}
                   <Trans>Create new client</Trans>
@@ -213,7 +216,7 @@ class InvoiceForm extends Component {
             </Col>
             <Col span={6}>
               <Field
-                name="number"
+                name='number'
                 component={AInput}
                 label={<Trans>Invoice number</Trans>}
                 validate={[required]}
@@ -222,7 +225,7 @@ class InvoiceForm extends Component {
             <Col span={6}>
               <Field
                 showSearch
-                name="currency"
+                name='currency'
                 component={ASelect}
                 label={<Trans>Currency</Trans>}
                 validate={[required]}
@@ -238,7 +241,7 @@ class InvoiceForm extends Component {
           <Row gutter={16}>
             <Col span={6} offset={12}>
               <Field
-                name="date"
+                name='date'
                 component={ADatePicker}
                 label={<Trans>Date</Trans>}
                 style={{ width: '100%' }}
@@ -247,7 +250,7 @@ class InvoiceForm extends Component {
             </Col>
             <Col span={6}>
               <Field
-                name="due_date"
+                name='due_date'
                 component={ADatePicker}
                 label={<Trans>Due date</Trans>}
                 style={{ width: '100%' }}
@@ -257,14 +260,14 @@ class InvoiceForm extends Component {
 
           <Row gutter={16} style={{ marginTop: '20px' }}>
             <Col span={24}>
-              <FieldArray name="lineItems" component={LineItems} />
+              <FieldArray name='lineItems' component={LineItems} />
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={8} style={{ marginTop: '20px' }}>
               <Field
-                name="customer_note"
+                name='customer_note'
                 component={ATextarea}
                 label={<Trans>Customer note</Trans>}
                 rows={4}
@@ -355,7 +358,7 @@ class InvoiceForm extends Component {
               <div>
                 {!this.isNew() && (
                   <Button
-                    type="dashed"
+                    type='dashed'
                     onClick={() => this.deleteConfirm(invoice._id, invoice._rev)}
                   >
                     <DeleteOutlined /> <Trans>Delete</Trans>
@@ -371,7 +374,7 @@ class InvoiceForm extends Component {
             )}
             {!this.isNew() && (
               <Link to={`/invoices/${get(this.props, ['match', 'params', 'id'])}/preview`}>
-                <Button type="dashed" style={{ marginTop: 10, marginRight: 8 }}>
+                <Button type='dashed' style={{ marginTop: 10, marginRight: 8 }}>
                   <EyeOutlined /> <Trans>View</Trans>
                 </Button>
               </Link>
@@ -385,8 +388,8 @@ class InvoiceForm extends Component {
               </Button>
             )}
             <Button
-              type="primary"
-              htmlType="submit"
+              type='primary'
+              htmlType='submit'
               disabled={pristine || submitting}
               loading={submitting}
               style={{ marginTop: 10 }}
@@ -398,11 +401,11 @@ class InvoiceForm extends Component {
 
         {children}
       </Layout.Content>
-    );
+    )
   }
 }
 
-const selector = formValueSelector('invoice');
+const selector = formValueSelector('invoice')
 
 export default withI18n()(
   withRouter(
@@ -419,13 +422,13 @@ export default withI18n()(
             [localStorage.getItem('organization'), 'currency'],
             ''
           ),
-          date: moment().format('YYYY-MM-DD'),
+          date: moment().format(dateFormat),
           due_date: moment()
             .add(
               get(state.organizations.items, [localStorage.getItem('organization'), 'due_days'], 0),
               'days'
             )
-            .format('YYYY-MM-DD'),
+            .format(dateFormat),
           customer_note: get(
             state.organizations.items,
             [localStorage.getItem('organization'), 'notes'],
@@ -437,8 +440,8 @@ export default withI18n()(
         reduxForm({
           form: 'invoice',
           onSubmit: async (data, dispatch, props) => {
-            const { lineItems, taxRates } = props;
-            const { subTotal, taxTotal, total } = totals(lineItems, taxRates);
+            const { lineItems, taxRates } = props
+            const { subTotal, taxTotal, total } = totals(lineItems, taxRates)
             return await dispatch({
               type: 'invoices/save',
               data: {
@@ -447,15 +450,15 @@ export default withI18n()(
                 taxTotal: taxTotal.format(),
                 total: total.format(),
               },
-            });
+            })
           },
           onSubmitSuccess: (result, dispatch, props) => {
             router.push({
               pathname: '/invoices/',
-            });
+            })
           },
         })(InvoiceForm)
       )
     )
   )
-);
+)

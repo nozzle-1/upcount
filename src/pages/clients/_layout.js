@@ -1,44 +1,66 @@
-import { Component } from 'react';
-import { compose } from 'redux';
-import { connect } from 'dva';
-import { Button, Input, Layout, Table, Tag, Row, Col } from 'antd';
-import { TeamOutlined, PhoneOutlined } from '@ant-design/icons';
-import { t, Trans } from '@lingui/macro';
-import { withI18n } from '@lingui/react';
-import { compact, find, filter, flatten, get, escapeRegExp, pick, isEmpty, values } from 'lodash';
+import { Component } from 'react'
+import { compose } from 'redux'
+import { connect } from 'dva'
+import { Button, Input, Layout, Table, Tag, Row, Col, Modal } from 'antd'
+import { TeamOutlined, PhoneOutlined } from '@ant-design/icons'
+import { t, Trans } from '@lingui/macro'
+import { withI18n } from '@lingui/react'
+import { compact, find, filter, flatten, get, escapeRegExp, pick, isEmpty, values } from 'lodash'
 
-import Link from 'umi/link';
+import Link from 'umi/link'
 
 class Clients extends Component {
   state = {
     search: null,
-  };
+  }
 
-  componentDidMount() {
-    this.props.dispatch({ type: 'clients/list' });
+  componentDidMount () {
+    this.props.dispatch({ type: 'clients/list' })
   }
 
   onSearch = value => {
     this.setState({
       search: value,
-    });
-  };
+    })
+  }
 
-  render() {
-    const { children, clients, i18n } = this.props;
-    const { search } = this.state;
+  
+
+  deleteConfirm = (_id, _rev) => {
+    const { i18n } = this.props
+
+    Modal.confirm({
+      title: i18n._(t`Delete client`),
+      okText: i18n._(t`Yes`),
+      okType: 'danger',
+      cancelText: i18n._(t`No`),
+      onOk: () => {
+        this.props.dispatch({
+          type: 'clients/remove',
+          data: {
+            _id,
+            _rev,
+          },
+        })
+      },
+    })
+  }
+
+  render () {
+    const { children, clients, i18n } = this.props
+    const { search } = this.state
 
     // Search - to be implemented in DB
-    let searchedClientItems = [];
+    let searchedClientItems = []
     if (search) {
       searchedClientItems = filter(values(clients.items), client => {
         const searchable = flatten(
           compact(values(pick(client, ['name', 'address', 'emails', 'phone', 'vatin', 'website'])))
-        );
+        )
         return find(searchable, value => {
-          return !!~value.search(new RegExp(escapeRegExp(search), 'i'));
-        });
-      });
+          return !!~value.search(new RegExp(escapeRegExp(search), 'i'))
+        })
+      })
     }
 
     return (
@@ -51,8 +73,8 @@ class Clients extends Component {
             </h2>
           </Col>
         </Row>
-        <Link to="/clients/new">
-          <Button type="primary" style={{ marginBottom: 10 }}>
+        <Link to='/clients/new'>
+          <Button type='primary' style={{ marginBottom: 10 }}>
             <Trans>New client</Trans>
           </Button>
         </Link>
@@ -64,24 +86,24 @@ class Clients extends Component {
         <Table
           dataSource={search ? searchedClientItems : values(clients.items)}
           pagination={false}
-          rowKey="_id"
+          rowKey='_id'
         >
           <Table.Column
             title={<Trans>Name</Trans>}
-            key="name"
+            key='name'
             render={client => <Link to={`/clients/${client._id}`}>{get(client, 'name', '-')}</Link>}
           />
-          <Table.Column title={<Trans>Address</Trans>} dataIndex="address" key="address" />
+          <Table.Column title={<Trans>Address</Trans>} dataIndex='address' key='address' />
           <Table.Column
             title={<Trans>Emails</Trans>}
-            dataIndex="emails"
-            key="emails"
+            dataIndex='emails'
+            key='emails'
             render={emails => (emails ? emails.map(email => <Tag key={email}>{email}</Tag>) : '')}
           />
           <Table.Column
             title={<Trans>Phone</Trans>}
-            dataIndex="phone"
-            key="phone"
+            dataIndex='phone'
+            key='phone'
             render={phone => {
               if (!isEmpty(phone)) {
                 return (
@@ -89,17 +111,17 @@ class Clients extends Component {
                     <PhoneOutlined />
                     {` ${phone}`}
                   </a>
-                );
+                )
               }
             }}
           />
-          <Table.Column title={<Trans>VATIN</Trans>} dataIndex="vatin" key="vatin" />
+          <Table.Column title={<Trans>VATIN</Trans>} dataIndex='vatin' key='vatin' />
           <Table.Column
             title={<Trans>Website</Trans>}
-            dataIndex="website"
-            key="website"
+            dataIndex='website'
+            key='website'
             render={website => (
-              <a href={website} target="_blank" rel="noreferrer noopener">
+              <a href={website} target='_blank' rel='noreferrer noopener'>
                 {website}
               </a>
             )}
@@ -107,13 +129,13 @@ class Clients extends Component {
         </Table>
         {children}
       </Layout.Content>
-    );
+    )
   }
 }
 
 export default compose(
   withI18n(),
   connect(state => {
-    return { clients: state.clients };
+    return { clients: state.clients }
   })
-)(Clients);
+)(Clients)

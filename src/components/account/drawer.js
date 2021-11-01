@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { compose } from 'redux';
-import { connect } from 'dva';
-import { Button, Drawer, List, Switch, Tooltip, Typography } from 'antd';
+import { useState } from 'react'
+import { compose } from 'redux'
+import { connect } from 'dva'
+import { Button, Drawer, List, Switch, Tooltip, Typography } from 'antd'
 import {
   CheckOutlined,
   CloseOutlined,
@@ -9,27 +9,28 @@ import {
   LockOutlined,
   SyncOutlined,
   SwapOutlined,
-} from '@ant-design/icons';
-import { t, Trans } from '@lingui/macro';
-import { withI18n } from '@lingui/react';
-import { assign, capitalize, get, values } from 'lodash';
+} from '@ant-design/icons'
+import { t, Trans } from '@lingui/macro'
+import { withI18n } from '@lingui/react'
+import { assign, capitalize, get, values } from 'lodash'
 
-import moment from 'moment';
+import moment from 'moment'
 
-import LoginForm from './login';
-import RegisterForm from './register';
-import { i18n } from '@/layouts/base';
+import LoginForm from './login'
+import RegisterForm from './register'
+import { i18n } from '@/layouts/base'
+import { dateTimeFormat } from '../../date'
 
-const { Title } = Typography;
+const { Title } = Typography
 
 const NeedsToken = (visible, closeDrawer) => {
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState(null)
 
   return (
     <Drawer
       visible={visible}
       title={i18n._(t`Upcount account`)}
-      placement="right"
+      placement='right'
       closable={false}
       onClose={closeDrawer}
       width={500}
@@ -38,7 +39,7 @@ const NeedsToken = (visible, closeDrawer) => {
         <Trans>To start syncing</Trans> <SyncOutlined />
       </Title>
       <p style={{ textAlign: 'center' }}>
-        <Button type="primary" onClick={() => setForm('login')} style={{ marginRight: 12 }}>
+        <Button type='primary' onClick={() => setForm('login')} style={{ marginRight: 12 }}>
           <Trans>Log in</Trans>
         </Button>
         <Button onClick={() => setForm('register')}>
@@ -61,17 +62,21 @@ const NeedsToken = (visible, closeDrawer) => {
       </Drawer>
       <p style={{ marginTop: 40 }}>
         <DeploymentUnitOutlined style={{ fontSize: 20, marginRight: 8, float: 'left' }} />
-        <Trans>Registering an Upcount account will allow you to syncronize your data between computers and
-          provides a secure backup.</Trans>
+        <Trans>
+          Registering an Upcount account will allow you to syncronize your data between computers
+          and provides a secure backup.
+        </Trans>
       </p>
       <p>
         <SwapOutlined style={{ fontSize: 20, marginRight: 8, float: 'left' }} />
-        <Trans>Your data is always securely transfered between the hosted CouchDB server and your devices
-          over encrypted HTTP requests.</Trans>
+        <Trans>
+          Your data is always securely transfered between the hosted CouchDB server and your devices
+          over encrypted HTTP requests.
+        </Trans>
       </p>
     </Drawer>
-  );
-};
+  )
+}
 
 const HasToken = (visible, closeDrawer, organizations, dispatch) => {
   return (
@@ -80,19 +85,19 @@ const HasToken = (visible, closeDrawer, organizations, dispatch) => {
       title={
         <div>
           {localStorage.getItem('email')}
-          <Tooltip title="Logout">
+          <Tooltip title='Logout'>
             <LockOutlined
               onClick={() => {
-                dispatch({ type: 'accounts/logout' });
-                closeDrawer();
-                window.location.reload();
+                dispatch({ type: 'accounts/logout' })
+                closeDrawer()
+                window.location.reload()
               }}
               style={{ float: 'right' }}
             />
           </Tooltip>
         </div>
       }
-      placement="right"
+      placement='right'
       closable={false}
       onClose={closeDrawer}
       width={500}
@@ -101,9 +106,11 @@ const HasToken = (visible, closeDrawer, organizations, dispatch) => {
         <Title level={4}>
           <Trans>Organizations syncing</Trans>
         </Title>
-        <p><Trans>Toggle the organizations you want to enable syncronization for.</Trans></p>
+        <p>
+          <Trans>Toggle the organizations you want to enable syncronization for.</Trans>
+        </p>
         <List
-          itemLayout="horizontal"
+          itemLayout='horizontal'
           dataSource={values(organizations.items)}
           renderItem={organization => (
             <List.Item
@@ -113,7 +120,7 @@ const HasToken = (visible, closeDrawer, organizations, dispatch) => {
                     {get(JSON.parse(localStorage.getItem('syncedAt')), organization._id)
                       ? moment(
                           get(JSON.parse(localStorage.getItem('syncedAt')), organization._id)
-                        ).format('YYYY-MM-DD HH:mm')
+                        ).format(dateTimeFormat)
                       : '-'}{' '}
                     <SyncOutlined />
                   </div>
@@ -130,7 +137,7 @@ const HasToken = (visible, closeDrawer, organizations, dispatch) => {
                       dispatch({
                         type: 'organizations/setSync',
                         data: assign(organization, { sync: checked }),
-                      });
+                      })
                     }}
                   />
                 }
@@ -142,22 +149,24 @@ const HasToken = (visible, closeDrawer, organizations, dispatch) => {
       </div>
       <p style={{ marginTop: 40 }}>
         <SwapOutlined style={{ fontSize: 20, marginRight: 8, float: 'left' }} />
-        <Trans>Your data is always securely transfered between the hosted CouchDB server and your devices
-          over encrypted HTTP requests.</Trans>
+        <Trans>
+          Your data is always securely transfered between the hosted CouchDB server and your devices
+          over encrypted HTTP requests.
+        </Trans>
       </p>
     </Drawer>
-  );
-};
+  )
+}
 
 const AccountDrawer = ({ visible, closeDrawer, organizations, dispatch }) => {
   return localStorage.getItem('token') && localStorage.getItem('email')
     ? HasToken(visible, closeDrawer, organizations, dispatch)
-    : NeedsToken(visible, closeDrawer);
-};
+    : NeedsToken(visible, closeDrawer)
+}
 
 export default compose(
   withI18n(),
   connect(state => ({
     organizations: state.organizations,
   }))
-)(AccountDrawer);
+)(AccountDrawer)
