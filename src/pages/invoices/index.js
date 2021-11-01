@@ -1,10 +1,10 @@
-import { Component } from 'react';
-import { compose } from 'redux';
-import { connect } from 'dva';
-import { Button, Dropdown, Input, Layout, Menu, Table, Row, Col } from 'antd';
-import { FileTextOutlined } from '@ant-design/icons';
-import { t, NumberFormat, Trans } from '@lingui/macro';
-import { withI18n } from '@lingui/react';
+import { Component } from 'react'
+import { compose } from 'redux'
+import { connect } from 'dva'
+import { Button, Dropdown, Input, Layout, Menu, Table, Row, Col } from 'antd'
+import { FileTextOutlined } from '@ant-design/icons'
+import { t, NumberFormat, Trans } from '@lingui/macro'
+import { withI18n } from '@lingui/react'
 import {
   compact,
   flatten,
@@ -16,22 +16,22 @@ import {
   isUndefined,
   pick,
   values,
-} from 'lodash';
+} from 'lodash'
 
-import currency from 'currency.js';
-import Link from 'umi/link';
+import currency from 'currency.js'
+import Link from 'umi/link'
 
-import StateTag from '../../components/invoices/state-tag';
-import { OrganizationContext } from '../../providers/contexts';
+import StateTag from '../../components/invoices/state-tag'
+import { OrganizationContext } from '../../providers/contexts'
 
 class Invoices extends Component {
   state = {
     search: null,
-  };
+  }
 
-  componentDidMount() {
-    this.props.dispatch({ type: 'invoices/list' });
-    this.props.dispatch({ type: 'clients/list' });
+  componentDidMount () {
+    this.props.dispatch({ type: 'invoices/list' })
+    this.props.dispatch({ type: 'clients/list' })
   }
 
   onStateSelect = (_id, _rev, key) => {
@@ -42,49 +42,49 @@ class Invoices extends Component {
         _rev,
         state: key,
       },
-    });
-  };
+    })
+  }
 
   onSearch = value => {
     this.setState({
       search: value,
-    });
-  };
+    })
+  }
 
-  render() {
-    const { clients, i18n, invoices } = this.props;
-    const { search } = this.state;
+  render () {
+    const { clients, i18n, invoices } = this.props
+    const { search } = this.state
 
-    let searchedInvoiceItems = [];
+    let searchedInvoiceItems = []
     if (search) {
       searchedInvoiceItems = filter(values(invoices.items), invoice => {
-        let searchable = flatten(compact(values(pick(invoice, ['number', 'sum']))));
+        let searchable = flatten(compact(values(pick(invoice, ['number', 'sum']))))
         if (has(invoice, 'client') && has(clients.items, invoice.client)) {
-          searchable.push(get(clients.items, [invoice.client, 'name']));
+          searchable.push(get(clients.items, [invoice.client, 'name']))
         }
         return find(searchable, value => {
-          return !!~value.search(new RegExp(escapeRegExp(search), 'i'));
-        });
-      });
+          return !!~value.search(new RegExp(escapeRegExp(search), 'i'))
+        })
+      })
     }
 
     const stateMenu = (_id, _rev) => (
       <Menu onClick={({ item, key }) => this.onStateSelect(_id, _rev, key)}>
-        <Menu.Item key="draft">
+        <Menu.Item key='draft'>
           <Trans>Draft</Trans>
         </Menu.Item>
-        <Menu.Item key="confirmed">
+        <Menu.Item key='confirmed'>
           <Trans>Confirmed</Trans>
         </Menu.Item>
-        <Menu.Item key="paid">
+        <Menu.Item key='paid'>
           <Trans>Paid</Trans>
         </Menu.Item>
         <Menu.Divider />
-        <Menu.Item key="void">
+        <Menu.Item key='void'>
           <Trans>Void</Trans>
         </Menu.Item>
       </Menu>
-    );
+    )
 
     const stateFilter = [
       {
@@ -103,7 +103,7 @@ class Invoices extends Component {
         text: i18n._(t`Void`),
         value: 'void',
       },
-    ];
+    ]
 
     return (
       <Layout.Content style={{ margin: 16, padding: 24, background: '#fff' }}>
@@ -115,8 +115,8 @@ class Invoices extends Component {
             </h2>
           </Col>
         </Row>
-        <Link to="/invoices/new">
-          <Button type="primary" style={{ marginBottom: 10 }}>
+        <Link to='/invoices/new'>
+          <Button type='primary' style={{ marginBottom: 10 }}>
             <Trans>New invoice</Trans>
           </Button>
         </Link>
@@ -125,15 +125,14 @@ class Invoices extends Component {
           onChange={e => this.onSearch(e.target.value)}
           style={{ width: 200, float: 'right' }}
         />
-
         <Table
           dataSource={search ? searchedInvoiceItems : values(invoices.items)}
           pagination={false}
-          rowKey="_id"
+          rowKey='_id'
         >
           <Table.Column
             title={<Trans>Number</Trans>}
-            key="number"
+            key='number'
             sorter={(a, b) => (a < b ? -1 : a === b ? 0 : 1)}
             render={invoice => (
               <Link to={`/invoices/${invoice._id}`}>
@@ -144,28 +143,28 @@ class Invoices extends Component {
           />
           <Table.Column
             title={<Trans>Client</Trans>}
-            dataIndex="client"
-            key="client"
+            dataIndex='client'
+            key='client'
             sorter={(a, b) => (a < b ? -1 : a === b ? 0 : 1)}
             render={client => get(clients.items, `${client}.name`, '-')}
           />
           <Table.Column
             title={<Trans>Date</Trans>}
-            dataIndex="date"
-            key="date"
+            dataIndex='date'
+            key='date'
             sorter={(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()}
-            render={date => (date ? date : '-')}
+            render={date => (date ? new Date(date).toLocaleDateString() : '-')}
           />
           <Table.Column
             title={<Trans>Due date</Trans>}
-            dataIndex="due_date"
-            key="due_date"
+            dataIndex='due_date'
+            key='due_date'
             sorter={(a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()}
-            render={date => (date ? date : '-')}
+            render={date => (date ? new Date(date).toLocaleDateString() : '-')}
           />
           <Table.Column
             title={<Trans>Sum</Trans>}
-            key="total"
+            key='total'
             sorter={(a, b) => a.total - b.total}
             render={invoice =>
               invoice.currency && invoice.total ? (
@@ -192,7 +191,7 @@ class Invoices extends Component {
           />
           <Table.Column
             title={<Trans>State</Trans>}
-            key="state"
+            key='state'
             filters={stateFilter}
             onFilter={(value, record) => record.state.indexOf(value) === 0}
             render={invoice => (
@@ -203,7 +202,7 @@ class Invoices extends Component {
           />
         </Table>
       </Layout.Content>
-    );
+    )
   }
 }
 
@@ -213,6 +212,6 @@ export default compose(
     return {
       clients: state.clients,
       invoices: state.invoices,
-    };
+    }
   })
-)(Invoices);
+)(Invoices)

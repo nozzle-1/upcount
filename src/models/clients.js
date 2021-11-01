@@ -2,6 +2,7 @@ import { initialize } from 'redux-form';
 import { message } from 'antd';
 import { t } from '@lingui/macro';
 import { keyBy } from 'lodash';
+import { push } from 'connected-react-router';
 
 import { i18n } from '../layouts/base';
 import * as clientsService from '../services/clients';
@@ -52,6 +53,17 @@ export default {
         message.error(i18n._(t`Error saving client!`), 5);
       }
     },
+
+    *remove({ data, resolve, reject }, { put, call }) {
+      try {
+        const response = yield call(clientsService.remove, data);
+        yield put({ type: 'removeSuccess', data: response });
+        message.success(i18n._(t`Client deleted!`), 5);
+        yield put(push('/clients'));
+      } catch (e) {
+        message.error(i18n._(t`Error deleting client!`), 5);
+      }
+    },
   },
 
   reducers: {
@@ -73,6 +85,18 @@ export default {
           ...state.items,
           [data._id]: data,
         },
+      };
+    },
+
+    removeSuccess(state, payload) {
+      const { data } = payload;
+
+      let items = { ...state.items };
+      delete items[data._id];
+
+      return {
+        ...state,
+        items: items,
       };
     },
   },
